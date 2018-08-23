@@ -58,37 +58,37 @@ sample_config = ' \
 '
 
 async def s3e_setup(cfg, args, s3elog):
-    if (len(args) == 0):
+    if len(args) == 0:
         cfg.show_all()
         return
 
     subcmd = args[0]
-    if (subcmd == "create"):
+    if subcmd == "create":
         pass
-    elif (subcmd == "edit"):
+    elif subcmd == "edit":
         pass
-    elif (subcmd == "show"):
+    elif subcmd == "show":
         cfg.show_all()
     else:
         s3elog.log_print("setup [ show | create | edit <name> <value> ]")
 
 async def s3e_store(cfg, args, s3elog):
 
-    if (len(args) == 0):
+    if len(args) == 0:
         cfg.show_stores()
         return
 
     subcmd = args[0]
-    if (subcmd == "add"):
-        if (len(args) < 2):
+    if subcmd == "add":
+        if len(args) < 2:
             s3elog.log_print("add <store_name>")
         pass
-    elif (subcmd == "del"):
-        if (len(args) < 2):
+    elif subcmd == "del":
+        if len(args) < 2:
             s3elog.log_print("add <store_name>")
         pass
-    elif (subcmd == "edit"):
-        if (len(args) < 2):
+    elif subcmd == "edit":
+        if len(args) < 2:
             s3elog.log_print("add <store_name>")
         pass
     else:
@@ -99,18 +99,18 @@ async def parse_cmd_1(cfg, args, s3elog):
 
     recursive = False
     local_obj = False
-    if (args[0] == "-r"):
+    if args[0] == "-r":
         recursive = True
-    elif (args[0] == "-l") :
+    elif args[0] == "-l" :
         local_obj = True
     else:
         recursive = False
         local_obj = False
 
-    if (len(args) > 1):
-        if (args[1] == "-r"):
+    if len(args) > 1:
+        if args[1] == "-r":
             recursive = True
-        elif (args[1] == "-l") :
+        elif args[1] == "-l":
             local_obj = True
         if recursive and not local_obj:
             objname = args[1]
@@ -144,18 +144,18 @@ async def parse_cmd_1(cfg, args, s3elog):
 async def parse_cmd_2(cfg, args, s3elog):
     recursive = False
     local_obj = False
-    if (args[0] == "-r"):
+    if args[0] == "-r":
         recursive = True
-    elif (args[0] == "-l") :
+    elif args[0] == "-l":
         local_obj = True
     else:
         recursive = False
         local_obj = False
 
-    if (len(args) > 1):
-        if (args[1] == "-l"):
+    if len(args) > 1:
+        if args[1] == "-l":
             local_obj = True
-        elif (args[1] == "-r"):
+        elif args[1] == "-r":
             recursive = True
         if recursive and not local_obj:
             first_objname = args[1]
@@ -203,14 +203,14 @@ async def gp_cmd_callback(session, s3elog, cmd, obj, result):
 
 
 async def cmd_callback(cmd, s3elog, obj, result):
-    if (cmd == 'list'):
+    if cmd == 'list':
         s3elog.log_print(cmd + "\t" + obj.objname())
         s3elog.log_print("\t" + str(result))
 
 async def cmd_recursive(cmd, s3elog, source_obj, session):
     try:
         tgt_obj = source_obj.arg
-        if (tgt_obj != None):
+        if tgt_obj is not None:
             s3elog.log_print(">" + cmd + "\t" + source_obj.pathname() + "\t" + tgt_obj.store_type() + "\t" + tgt_obj.pathname())
 
         tgt_childobj = None
@@ -221,31 +221,31 @@ async def cmd_recursive(cmd, s3elog, source_obj, session):
             await cmd_callback('list', s3elog, source_obj, res)
             for item in res:
                 source_childobj = source_obj.addchild(item)
-                if (tgt_obj != None):
+                if tgt_obj != None:
                     tgt_childobj = tgt_obj.addchild(item)
                     source_childobj.arg = tgt_childobj
                 if source_childobj.isfolder:
                     await cmd_recursive(cmd, s3elog, source_childobj, session)
                 else:
-                    if (tgt_childobj != None):
+                    if tgt_childobj != None:
                         source_obj.arg = tgt_childobj
                     op = edgex_access(source_childobj, s3elog)
-                    if (cmd == 'list'):
+                    if cmd == 'list':
                         res = await op.list(session)
                         await cmd_callback(cmd, s3elog, source_childobj, res)
-                    elif (cmd == 'exists'):
+                    elif cmd == 'exists':
                         res = await op.exists(session)
                         await cmd_callback(cmd, s3elog, source_childobj, res)
-                    elif (cmd == 'info'):
+                    elif cmd == 'info':
                         res = await op.info(session)
                         await cmd_callback(cmd, s3elog, source_childobj, res)
-                    elif (cmd == 'del'):
+                    elif cmd == 'del':
                         res = await op.delete(session)
                         await cmd_callback(cmd, s3elog, source_childobj, res)
-                    elif (cmd == 'get'):
+                    elif cmd == 'get':
                         databuf = await op.get(session)
                         await gp_cmd_callback(session, s3elog, 'get', source_childobj, databuf)
-                    elif (cmd == 'put'):
+                    elif cmd == 'put':
                         databuf = await op.get(session)
                         await gp_cmd_callback(session, s3elog, 'put', source_childobj, databuf)
         else:
@@ -259,16 +259,16 @@ async def cmd_recursive(cmd, s3elog, source_obj, session):
 
 async def parse_cmd_gend(cfg, args, s3elog):
     local_obj = False
-    if (args[0] == "-l"):
+    if args[0] == "-l":
         local_obj = True
-    if (len(args) > 1):
+    if len(args) > 1:
         start_obj_name = args[1]
     try:
         if local_obj:
             store = cfg.get_local_pwd()
         else:
             store = None
-        if (not start_obj_name.endswith("/")):
+        if not start_obj_name.endswith("/"):
             start_obj_name += "/"
         start_obj = edgex_object(cfg, s3elog, start_obj_name, store=store, as_is=local_obj)
         return start_obj
@@ -287,7 +287,7 @@ async def s3e_gend(cfg, args, session, s3elog):
 
         # for now only local 
         # TODO: make this for all 
-        if (start_gend_obj.store_type() != "FS"):
+        if start_gend_obj.store_type() != "FS":
             raise
 
         # make these configurable later not now
@@ -353,7 +353,7 @@ async def s3e_list(cfg, args, session, s3elog):
         return
     try:
         recursive, edgex_obj = await parse_cmd_1(cfg, args, s3elog)
-        if (recursive):
+        if recursive:
             await cmd_recursive('list', s3elog, edgex_obj, session)
         else:
             op = edgex_access(edgex_obj, s3elog)
@@ -370,7 +370,7 @@ async def s3e_exists(cfg, args, session, s3elog):
         return
     try:
         recursive, edgex_obj = await parse_cmd_1(cfg, args, s3elog)
-        if (recursive):
+        if recursive:
             await cmd_recursive('exists', s3elog, edgex_obj, session)
         else:
             op = edgex_access(edgex_obj, s3elog)
@@ -387,7 +387,7 @@ async def s3e_delete(cfg, args, session, s3elog):
         return
     try:
         recursive, edgex_obj = await parse_cmd_1(cfg, args, s3elog)
-        if (recursive):
+        if recursive:
             await cmd_recursive('del', s3elog, edgex_obj, session)
         else:
             op = edgex_access(edgex_obj, s3elog)
@@ -404,7 +404,7 @@ async def s3e_info(cfg, args, session, s3elog):
         return
     try:
         recursive, edgex_obj = await parse_cmd_1(cfg, args, s3elog)
-        if (recursive):
+        if recursive:
             await cmd_recursive('info', s3elog, edgex_obj, session)
         else:
             op = edgex_access(edgex_obj, s3elog)
@@ -424,7 +424,7 @@ async def s3e_get(cfg, args, session, s3elog):
         source_obj = objs[0]
         dest_obj = objs[1]
         source_obj.arg = dest_obj
-        if (recursive):
+        if recursive:
             await cmd_recursive('get', s3elog, source_obj, session)
         else:
             op = edgex_access(source_obj, s3elog)
@@ -444,7 +444,7 @@ async def s3e_put(cfg, args, session, s3elog):
         source_obj = objs[1]
         dest_obj = objs[0]
         source_obj.arg = dest_obj
-        if (recursive):
+        if recursive:
             await cmd_recursive('put', s3elog, source_obj, session)
         else:
             op = edgex_access(source_obj, s3elog)
@@ -460,33 +460,33 @@ async def s3e_put(cfg, args, session, s3elog):
 async def process_command(cmd, args, cfg_file , session, s3elog):
 
     valid_cmds = [ "exists", "put", "get", "del", "info", "list", "execute", "wget" , "gend", "setup", "store" ]
-    if (cmd not in valid_cmds):
+    if cmd not in valid_cmds:
         s3elog.log_print("Unknown command: " + cmd)
         return
 
     # let's read the the config file first 
-    if (cfg_file != None):
+    if cfg_file != None:
         async with aiofiles.open(cfg_file, mode='r') as f:
             cfg_contents = await f.read()
             cfg = edgex_config(cfg_contents, s3elog)
 
-    if (cmd == "setup"):
+    if cmd == "setup":
         await s3e_setup(cfg, args, s3elog)
-    elif (cmd == "store"):
+    elif cmd == "store":
         await s3e_store(cfg, args, s3elog)
-    elif (cmd == "list"):
+    elif cmd == "list":
         await s3e_list(cfg, args, session, s3elog)
-    elif (cmd == "get"):
+    elif cmd == "get":
         await s3e_get(cfg, args, session, s3elog)
-    elif (cmd == "put"):
+    elif cmd == "put":
         await s3e_put(cfg, args, session, s3elog)
-    elif (cmd == "del"):
+    elif cmd == "del":
         await s3e_delete(cfg, args, session, s3elog)
-    elif (cmd == "exists"):
+    elif cmd == "exists":
         await s3e_exists(cfg, args, session, s3elog)
-    elif (cmd == "info"):
+    elif cmd == "info":
         await s3e_info(cfg, args, session, s3elog)
-    elif (cmd == "gend"):
+    elif cmd == "gend":
         await s3e_gend(cfg, args, session, s3elog)
     else:
         s3elog.log_error("Unknown command")
@@ -549,7 +549,7 @@ def main():
             system_info(debug_level)
             sys.exit(0)
 
-    if (len(remainder) < 1):
+    if len(remainder) < 1:
         usage()
         sys.exit(2)
 
